@@ -1,5 +1,4 @@
 use derive_more::Display;
-use hummer::coding::hex_encode;
 use serde::{Deserialize, Serialize};
 
 use crate::types::{Hash, ViewChangeReason};
@@ -7,7 +6,7 @@ use crate::wal::SMRBase;
 use crate::DurationConfig;
 
 /// SMR steps. The default step is commit step because SMR needs rich status to start a new block.
-#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Serialize, Deserialize, Default, Clone, Debug, Display, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Step {
     /// Prepose step, in this step:
     /// Firstly, each node calculate the new proposer, then:
@@ -16,7 +15,7 @@ pub enum Step {
     /// Replica:
     ///     wait for a proposal and check it.
     /// Then goto prevote step.
-    #[display(fmt = "Prepose step")]
+    #[display("Prepose step")]
     Propose,
 
     /// Prevote step, in this step:
@@ -29,7 +28,7 @@ pub enum Step {
     ///     2. wait for aggregated vote,
     ///     3. check the aggregated vote.
     /// Then goto precommit step.
-    #[display(fmt = "Prevote step")]
+    #[display("Prevote step")]
     Prevote,
 
     /// Precommit step, in this step:
@@ -43,25 +42,21 @@ pub enum Step {
     ///     3. check the aggregated vote.
     /// If there is no consensus in the precommit step, goto propose step and start a new round
     /// cycle. Otherwise, goto commit step.
-    #[display(fmt = "Precommit step")]
+    #[display("Precommit step")]
     Precommit,
 
     /// Brake step, in this step:
     /// wait for other nodes.
-    #[display(fmt = "Brake step")]
+    #[display("Brake step")]
     Brake,
 
     /// Commit step, in this step each node commit the block and wait for the rich status. After
     /// receiving the it, all nodes will goto propose step and start a new block consensus.
-    #[display(fmt = "Commit step")]
+    #[display("Commit step")]
+    #[default]
     Commit,
 }
 
-impl Default for Step {
-    fn default() -> Self {
-        Step::Commit
-    }
-}
 
 impl From<Step> for u8 {
     fn from(step: Step) -> u8 {
@@ -132,7 +127,7 @@ pub enum SMREvent {
     /// for state: update round,
     /// for timer: set a propose step timer. If `round == 0`, set an extra total height timer.
     #[display(
-        fmt = "New round {} event, lock round {:?}, lock proposal {:?}",
+        "New round {} event, lock round {:?}, lock proposal {:?}",
         round,
         lock_round,
         lock_proposal
@@ -151,7 +146,7 @@ pub enum SMREvent {
     /// for state: transmit a prevote vote,
     /// for timer: set a prevote step timer.
     #[display(
-        fmt = "Prevote event height {}, round {}, block hash {:?}, lock round {:?}",
+        "Prevote event height {}, round {}, block hash {:?}, lock round {:?}",
         height,
         round,
         "hex_encode(block_hash)",
@@ -168,7 +163,7 @@ pub enum SMREvent {
     /// for state: transmit a precommit vote,
     /// for timer: set a precommit step timer.
     #[display(
-        fmt = "Precommit event height {}, round {}, block hash {:?}, lock round {:?}",
+        "Precommit event height {}, round {}, block hash {:?}, lock round {:?}",
         height,
         round,
         "hex_encode(block_hash)",
@@ -183,14 +178,14 @@ pub enum SMREvent {
     /// Commit event,
     /// for state: do commit,
     /// for timer: do nothing.
-    #[display(fmt = "Commit event hash {:?}", "hex_encode(_0)")]
+    #[display("Commit event hash {:?}", "hex_encode(_0)")]
     Commit(Hash),
 
     /// Brake event,
     /// for state: broadcast Choke message,
     /// for timer: set a retry timeout timer.
     #[display(
-        fmt = "Brake event height {}, round {}, lock round {:?}",
+        "Brake event height {}, round {}, lock round {:?}",
         height,
         round,
         lock_round
@@ -204,7 +199,7 @@ pub enum SMREvent {
     /// Stop event,
     /// for state: stop process,
     /// for timer: stop process.
-    #[display(fmt = "Stop event")]
+    #[display("Stop event")]
     Stop,
 }
 
@@ -212,28 +207,28 @@ pub enum SMREvent {
 #[derive(Clone, Debug, Display, PartialEq, Eq)]
 pub enum TriggerType {
     /// Proposal trigger.
-    #[display(fmt = "Proposal")]
+    #[display("Proposal")]
     Proposal,
     /// Prevote quorum certificate trigger.
-    #[display(fmt = "PrevoteQC")]
+    #[display("PrevoteQC")]
     PrevoteQC,
     /// Precommit quorum certificate trigger.
-    #[display(fmt = "PrecommitQC")]
+    #[display("PrecommitQC")]
     PrecommitQC,
     /// New Height trigger.
-    #[display(fmt = "New height")]
+    #[display("New height")]
     NewHeight(SMRStatus),
     /// Wal infomation.
-    #[display(fmt = "Wal Infomation")]
+    #[display("Wal Infomation")]
     WalInfo,
     /// Brake timeout.
-    #[display(fmt = "Brake Timeout")]
+    #[display("Brake Timeout")]
     BrakeTimeout,
     /// Continue new round trigger.
-    #[display(fmt = "Continue Round")]
+    #[display("Continue Round")]
     ContinueRound,
     /// Stop process.
-    #[display(fmt = "Stop Process")]
+    #[display("Stop Process")]
     Stop,
 }
 
@@ -241,10 +236,10 @@ pub enum TriggerType {
 #[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
 pub enum TriggerSource {
     /// SMR triggered by state.
-    #[display(fmt = "State")]
+    #[display("State")]
     State = 0,
     /// SMR triggered by timer.
-    #[display(fmt = "Timer")]
+    #[display("Timer")]
     Timer = 1,
 }
 
@@ -286,12 +281,7 @@ impl From<u8> for TriggerType {
 /// For each sources, while filling the `SMRTrigger`, the `height` field take the current height
 /// directly.
 #[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(
-    fmt = "{:?} trigger from {:?}, height {}",
-    trigger_type,
-    source,
-    height
-)]
+#[display("{:?} trigger from {:?}, height {}", trigger_type, source, height)]
 pub struct SMRTrigger {
     /// SMR trigger type.
     pub trigger_type: TriggerType,

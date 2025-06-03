@@ -7,7 +7,6 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use bytes::Bytes;
 use lru_cache::LruCache;
-use rlp::Encodable;
 use serde::{Deserialize, Serialize};
 
 use overlord::types::Node;
@@ -60,7 +59,7 @@ impl Wal for MockWal {
     async fn load(&self) -> Result<Option<Bytes>, Box<dyn Error + Send>> {
         let info = self.content.lock().unwrap().as_ref().cloned();
         if let Some(info) = info.clone() {
-            let content: WalInfo<Block> = rlp::decode(&info).unwrap();
+            let content: WalInfo<Block> = bcs::from_bytes(&info).unwrap();
             println!("{:?} load {:?}", to_hex(&self.address), content);
         }
         Ok(info)
@@ -129,7 +128,7 @@ impl Record {
                         .lock()
                         .unwrap()
                         .as_ref()
-                        .map(|wal| rlp::decode(wal).unwrap()),
+                        .map(|wal| bcs::from_bytes(wal).unwrap()),
                 )
             })
             .collect();
@@ -246,7 +245,7 @@ impl RecordInternal {
                         .lock()
                         .unwrap()
                         .as_ref()
-                        .map(|wal| rlp::decode(wal).unwrap()),
+                        .map(|wal| bcs::from_bytes(wal).unwrap()),
                 )
             })
             .collect();
@@ -322,7 +321,8 @@ impl RecordForWal {
                         test_id_updated: Arc::clone(&test_id),
                         address: address.clone(),
                         content: Arc::new(Mutex::new(
-                            wal.as_ref().map(|wal| Bytes::from(wal.rlp_bytes())),
+                            wal.as_ref()
+                                .map(|wal| Bytes::from(bcs::to_bytes(wal).unwrap())),
                         )),
                     },
                 )

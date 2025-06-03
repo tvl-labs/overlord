@@ -720,7 +720,10 @@ where
 
         let signature = self
             .util
-            .sign(self.util.hash(Bytes::from(rlp::encode(&choke.to_hash()))))
+            .sign(
+                self.util
+                    .hash(Bytes::from(bcs::to_bytes(&choke.to_hash()).unwrap())),
+            )
             .map_err(|err| ConsensusError::CryptoErr(format!("sign choke error {:?}", err)))?;
         let signed_choke = SignedChoke {
             signature,
@@ -1384,7 +1387,10 @@ where
         log::debug!("Overlord: state sign a proposal");
         let signature = self
             .util
-            .sign(self.util.hash(Bytes::from(rlp::encode(&proposal))))
+            .sign(
+                self.util
+                    .hash(Bytes::from(bcs::to_bytes(&proposal).unwrap())),
+            )
             .map_err(|err| ConsensusError::CryptoErr(format!("{:?}", err)))?;
 
         Ok(SignedProposal {
@@ -1397,7 +1403,7 @@ where
         log::debug!("Overlord: state sign a vote");
         let signature = self
             .util
-            .sign(self.util.hash(Bytes::from(rlp::encode(&vote))))
+            .sign(self.util.hash(Bytes::from(bcs::to_bytes(&vote).unwrap())))
             .map_err(|err| ConsensusError::CryptoErr(format!("{:?}", err)))?;
 
         Ok(SignedVote {
@@ -1518,11 +1524,7 @@ where
 
         // Check block failed case.
         let proposal = proposal.unwrap().0;
-        if self
-            .is_full_transaction
-            .get(&proposal.proposal.block_hash)
-            .is_none()
-        {
+        if !self.is_full_transaction.contains_key(&proposal.proposal.block_hash) {
             return ViewChangeReason::CheckBlockNotPass;
         }
 
@@ -1620,7 +1622,7 @@ where
         };
 
         self.wal
-            .save(Bytes::from(rlp::encode(&wal_info)))
+            .save(Bytes::from(bcs::to_bytes(&wal_info).unwrap()))
             .await
             .map_err(|e| {
                 log::error!("Overlord: state save wal error {:?}", e);
@@ -1750,7 +1752,7 @@ where
             return Ok(None);
         }
 
-        let info: WalInfo<T> = rlp::decode(tmp.unwrap().as_ref())
+        let info: WalInfo<T> = bcs::from_bytes(tmp.unwrap().as_ref())
             .map_err(|e| ConsensusError::LoadWalErr(e.to_string()))?;
         Ok(Some(info))
     }
@@ -1776,7 +1778,7 @@ where
             }
 
             FromWhere::PrecommitQC(round) => {
-                let qc = if round == u64::max_value() {
+                let qc = if round == u64::MAX {
                     mock_init_qc()
                 } else {
                     self.votes

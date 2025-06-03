@@ -8,34 +8,34 @@ use derive_more::Display;
 #[derive(Clone, Debug, Display)]
 pub enum ConsensusError {
     ///
-    #[display(fmt = "Invalid address")]
+    #[display("Invalid address")]
     InvalidAddress,
     ///
-    #[display(fmt = "Channel error {:?}", _0)]
+    #[display("Channel error {:?}", _0)]
     ChannelErr(String),
     ///
-    #[display(fmt = "Trigger {} SMR error", _0)]
+    #[display("Trigger {} SMR error", _0)]
     TriggerSMRErr(String),
     ///
-    #[display(fmt = "Monitor {} event error", _0)]
+    #[display("Monitor {} event error", _0)]
     MonitorEventErr(String),
     ///
-    #[display(fmt = "Throw {} event error", _0)]
+    #[display("Throw {} event error", _0)]
     ThrowEventErr(String),
     ///
-    #[display(fmt = "Proposal error {}", _0)]
+    #[display("Proposal error {}", _0)]
     ProposalErr(String),
     ///
-    #[display(fmt = "Prevote error {}", _0)]
+    #[display("Prevote error {}", _0)]
     PrevoteErr(String),
     ///
-    #[display(fmt = "Precommit error {}", _0)]
+    #[display("Precommit error {}", _0)]
     PrecommitErr(String),
     ///
-    #[display(fmt = "Brake error {}", _0)]
+    #[display("Brake error {}", _0)]
     BrakeErr(String),
     ///
-    #[display(fmt = "Self round is {}, vote round is {}", local, vote)]
+    #[display("Self round is {}, vote round is {}", local, vote)]
     RoundDiff {
         ///
         local: u64,
@@ -43,25 +43,25 @@ pub enum ConsensusError {
         vote: u64,
     },
     ///
-    #[display(fmt = "Self check not pass {}", _0)]
+    #[display("Self check not pass {}", _0)]
     SelfCheckErr(String),
     ///
-    #[display(fmt = "Correctness error {}", _0)]
+    #[display("Correctness error {}", _0)]
     CorrectnessErr(String),
     ///
-    #[display(fmt = "Timer error {}", _0)]
+    #[display("Timer error {}", _0)]
     TimerErr(String),
     ///
-    #[display(fmt = "State error {}", _0)]
+    #[display("State error {}", _0)]
     StateErr(String),
     ///
-    #[display(fmt = "Multiple proposal in height {}, round {}", _0, _1)]
+    #[display("Multiple proposal in height {}, round {}", _0, _1)]
     MultiProposal(u64, u64),
     ///
-    #[display(fmt = "Storage error {}", _0)]
+    #[display("Storage error {}", _0)]
     StorageErr(String),
     ///
-    #[display(fmt = "Save Wal error {}, {}, {} step", height, round, step)]
+    #[display("Save Wal error {}, {}, {} step", height, round, step)]
     SaveWalErr {
         ///
         height: u64,
@@ -71,16 +71,16 @@ pub enum ConsensusError {
         step: String,
     },
     ///
-    #[display(fmt = "Load Wal error {}", _0)]
+    #[display("Load Wal error {}", _0)]
     LoadWalErr(String),
     ///
-    #[display(fmt = "Crypto error {}", _0)]
+    #[display("Crypto error {}", _0)]
     CryptoErr(String),
     ///
-    #[display(fmt = "Aggregated signature error {}", _0)]
+    #[display("Aggregated signature error {}", _0)]
     AggregatedSignatureErr(String),
     /// Other error.
-    #[display(fmt = "Other error {}", _0)]
+    #[display("Other error {}", _0)]
     Other(String),
 }
 

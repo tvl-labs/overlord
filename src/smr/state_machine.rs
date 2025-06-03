@@ -16,7 +16,7 @@ use crate::{ConsensusResult, INIT_HEIGHT, INIT_ROUND};
 /// A smallest implementation of an atomic overlord state machine. It
 #[derive(Debug, Display)]
 #[rustfmt::skip]
-#[display(fmt = "State machine height {}, round {}, step {:?}", height, round, step)]
+#[display("State machine height {}, round {}, step {:?}", height, round, step)]
 pub struct StateMachine {
     height:      u64,
     round:         u64,
@@ -180,7 +180,7 @@ impl StateMachine {
             lock_proposal: None,
             new_interval: status.new_interval,
             new_config: status.new_config,
-            from_where: FromWhere::PrecommitQC(u64::max_value()),
+            from_where: FromWhere::PrecommitQC(u64::MAX),
         })?;
         Ok(())
     }
@@ -485,7 +485,7 @@ impl StateMachine {
                 lock_proposal,
                 new_interval: None,
                 new_config: None,
-                from_where: FromWhere::PrecommitQC(u64::max_value()),
+                from_where: FromWhere::PrecommitQC(u64::MAX),
             },
             Step::Prevote => SMREvent::PrevoteVote {
                 height: self.height,

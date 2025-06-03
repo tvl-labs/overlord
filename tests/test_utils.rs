@@ -1,7 +1,6 @@
 use std::error::Error;
 
 use async_trait::async_trait;
-use bincode::{deserialize, serialize};
 use blake2b_simd::blake2b;
 use bytes::{Bytes, BytesMut};
 use creep::Context;
@@ -25,18 +24,6 @@ struct Pill {
     epoch: Vec<u64>,
 }
 
-impl Codec for Pill {
-    fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>> {
-        let encode: Vec<u8> = serialize(&self).expect("Serialize Pill error");
-        Ok(Bytes::from(encode))
-    }
-
-    fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>> {
-        let decode: Pill = deserialize(data.as_ref()).expect("Deserialize Pill error.");
-        Ok(decode)
-    }
-}
-
 impl Pill {
     fn new(height: u64) -> Self {
         let epoch = (0..128).map(|_| random::<u64>()).collect::<Vec<_>>();
@@ -58,7 +45,8 @@ impl Consensus<Pill> for ConsensusHelper<Pill> {
         height: u64,
     ) -> Result<(Pill, Hash), Box<dyn Error + Send>> {
         let epoch = Pill::new(height);
-        let hash = BytesMut::from(blake2b(epoch.encode()?.as_ref()).as_bytes()).freeze();
+        let hash =
+            BytesMut::from(blake2b(bcs::to_bytes(&epoch).unwrap().as_ref()).as_bytes()).freeze();
         Ok((epoch, hash))
     }
 

@@ -5,7 +5,7 @@ use bytes::{Bytes, BytesMut};
 use hasher::{Hasher, HasherKeccak};
 use hummer::coding::hex_encode;
 use lazy_static::lazy_static;
-use rand::{random, seq::SliceRandom, thread_rng};
+use rand::{random, rng, seq::SliceRandom};
 
 use overlord::types::Node;
 use overlord::DurationConfig;
@@ -35,7 +35,7 @@ pub fn create_alive_nodes(nodes: Vec<Node>) -> Vec<Node> {
     let rand_num = 0;
     //    let rand_num = random::<usize>() % (node_num - thresh_num + 1);
     let mut alive_nodes = nodes;
-    alive_nodes.shuffle(&mut thread_rng());
+    alive_nodes.shuffle(&mut rng());
     while alive_nodes.len() > thresh_num + rand_num {
         alive_nodes.pop();
     }
@@ -79,7 +79,7 @@ pub fn get_index_array(nodes: &[Node], alives: &[Node]) -> Vec<usize> {
 }
 
 pub fn get_index(nodes: &[Node], address: &Bytes) -> usize {
-    let mut index = std::usize::MAX;
+    let mut index = usize::MAX;
     nodes.iter().enumerate().for_each(|(i, node)| {
         if node.address == address {
             index = i;

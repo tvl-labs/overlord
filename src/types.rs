@@ -3,7 +3,7 @@ use std::convert::TryFrom;
 
 use bytes::Bytes;
 use derive_more::Display;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::error::ConsensusError;
 use crate::smr::smr_types::{SMRStatus, Step, TriggerType};
@@ -21,10 +21,10 @@ pub type Signature = Bytes;
 #[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
 pub enum VoteType {
     /// Prevote vote or QC.
-    #[display(fmt = "Prevote")]
+    #[display("Prevote")]
     Prevote,
     /// Precommit Vote or QC.
-    #[display(fmt = "Precommit")]
+    #[display("Precommit")]
     Precommit,
 }
 
@@ -72,22 +72,22 @@ impl TryFrom<u8> for VoteType {
 #[derive(Clone, Debug, Display, PartialEq, Eq)]
 pub enum OverlordMsg<T: Codec> {
     /// Signed proposal message.
-    #[display(fmt = "Signed Proposal")]
+    #[display("Signed Proposal")]
     SignedProposal(SignedProposal<T>),
     /// Signed vote message.
-    #[display(fmt = "Signed Vote")]
+    #[display("Signed Vote")]
     SignedVote(SignedVote),
     /// Aggregated vote message.
-    #[display(fmt = "Aggregated Vote")]
+    #[display("Aggregated Vote")]
     AggregatedVote(AggregatedVote),
     /// Rich status message.
-    #[display(fmt = "Rich Status")]
+    #[display("Rich Status")]
     RichStatus(Status),
     /// Signed choke message
-    #[display(fmt = "Choke Message")]
+    #[display("Choke Message")]
     SignedChoke(SignedChoke),
     /// Stop consensus process.
-    #[display(fmt = "Stop Overlord")]
+    #[display("Stop Overlord")]
     Stop,
 
     /// This is only for easier testing.
@@ -127,61 +127,63 @@ pub enum UpdateFrom {
 #[derive(Serialize, Deserialize, Clone, Debug, Display)]
 pub enum ViewChangeReason {
     ///
-    #[display(fmt = "Do not receive proposal from network")]
+    #[display("Do not receive proposal from network")]
     NoProposalFromNetwork,
 
     ///
-    #[display(fmt = "Do not receive Prevote QC from network")]
+    #[display("Do not receive Prevote QC from network")]
     NoPrevoteQCFromNetwork,
 
     ///
-    #[display(fmt = "Do not receive precommit QC from network")]
+    #[display("Do not receive precommit QC from network")]
     NoPrecommitQCFromNetwork,
 
     ///
-    #[display(fmt = "Check the block not pass")]
+    #[display("Check the block not pass")]
     CheckBlockNotPass,
 
     ///
-    #[display(fmt = "Update from a higher round prevote QC from {} to {}", _0, _1)]
+    #[display("Update from a higher round prevote QC from {} to {}", _0, _1)]
     UpdateFromHigherPrevoteQC(u64, u64),
 
     ///
-    #[display(fmt = "Update from a higher round precommit QC from {} to {}", _0, _1)]
+    #[display("Update from a higher round precommit QC from {} to {}", _0, _1)]
     UpdateFromHigherPrecommitQC(u64, u64),
 
     ///
-    #[display(fmt = "Update from a higher round choke QC from {} to {}", _0, _1)]
+    #[display("Update from a higher round choke QC from {} to {}", _0, _1)]
     UpdateFromHigherChokeQC(u64, u64),
 
     ///
-    #[display(fmt = "{:?} votes count is below threshold", _0)]
+    #[display("{:?} votes count is below threshold", _0)]
     LeaderReceivedVoteBelowThreshold(VoteType),
 
     ///
-    #[display(fmt = "other reasons")]
+    #[display("other reasons")]
     Others,
 }
 
 /// A signed proposal.
-#[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "Signed Proposal {:?}", proposal)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
+#[display("Signed Proposal {:?}", proposal)]
 pub struct SignedProposal<T: Codec> {
     /// Signature of the proposal.
     pub signature: Bytes,
     /// A proposal.
+    #[serde(bound = "T: Serialize + DeserializeOwned")]
     pub proposal: Proposal<T>,
 }
 
 /// A proposal
-#[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "Proposal height {}, round {}", height, round)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
+#[display("Proposal height {}, round {}", height, round)]
 pub struct Proposal<T: Codec> {
     /// Height of the proposal.
     pub height: u64,
     /// Round of the proposal.
     pub round: u64,
     /// Proposal content.
+    #[serde(bound = "T: Serialize + DeserializeOwned")]
     pub content: T,
     /// Proposal block hash.
     pub block_hash: Hash,
@@ -192,7 +194,7 @@ pub struct Proposal<T: Codec> {
 }
 
 /// A PoLC.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct PoLC {
     /// Lock round of the proposal.
     pub lock_round: u64,
@@ -201,8 +203,8 @@ pub struct PoLC {
 }
 
 /// A signed vote.
-#[derive(Clone, Debug, Display, PartialEq, Eq, Hash)]
-#[display(fmt = "Signed vote {:?}", vote)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[display("Signed vote {:?}", vote)]
 pub struct SignedVote {
     /// Signature of the vote.
     pub signature: Bytes,
@@ -260,7 +262,7 @@ pub struct AggregatedSignature {
 /// An aggregated vote.
 #[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
 #[rustfmt::skip]
-#[display(fmt = "{:?} aggregated vote height {}, round {}", vote_type, height, round)]
+#[display("{:?} aggregated vote height {}, round {}", vote_type, height, round)]
 pub struct AggregatedVote {
     /// Aggregated signature of the vote.
     pub signature: AggregatedSignature,
@@ -306,8 +308,8 @@ impl AggregatedVote {
 }
 
 /// A vote.
-#[derive(Clone, Debug, Display, PartialEq, Eq, Hash)]
-#[display(fmt = "{:?} vote height {}, round {}", vote_type, height, round)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[display("{:?} vote height {}, round {}", vote_type, height, round)]
 pub struct Vote {
     /// Height of the vote.
     pub height: u64,
@@ -320,19 +322,20 @@ pub struct Vote {
 }
 
 /// A commit.
-#[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "Commit height {}", height)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
+#[display("Commit height {}", height)]
 pub struct Commit<T: Codec> {
     /// Height of the commit.
     pub height: u64,
     /// Commit content.
+    #[serde(bound = "T: Serialize + DeserializeOwned")]
     pub content: T,
     /// The consensus proof.
     pub proof: Proof,
 }
 
 /// A Proof.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub struct Proof {
     /// Height of the proof.
     pub height: u64,
@@ -345,8 +348,8 @@ pub struct Proof {
 }
 
 /// A rich status.
-#[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "Rich status height {}", height)]
+#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
+#[display("Rich status height {}", height)]
 pub struct Status {
     /// New height.
     pub height: u64,
@@ -424,7 +427,7 @@ impl Node {
 }
 
 /// A verify response.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
 pub(crate) struct VerifyResp {
     /// The height of the verified block.
     pub(crate) height: u64,
@@ -466,7 +469,7 @@ impl AggregatedChoke {
 }
 
 /// A signed choke.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct SignedChoke {
     /// The signature of the choke.
     pub signature: Signature,
@@ -477,7 +480,7 @@ pub struct SignedChoke {
 }
 
 /// A choke.
-#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Choke {
     /// The height of the choke.
     pub height: u64,
@@ -496,7 +499,7 @@ impl Choke {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub(crate) struct HashChoke {
     pub(crate) height: u64,
     pub(crate) round: u64,

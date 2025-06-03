@@ -212,7 +212,7 @@ impl Timer {
 /// Timeout info which is a future consists of a `futures-timer Delay`, timeout info and a sender.
 /// When the timeout expires, future will send timeout info by sender.
 #[derive(Debug, Display)]
-#[display(fmt = "{:?}", info)]
+#[display("{:?}", info)]
 struct TimeoutInfo {
     timeout: Sleep,
     info: SMREvent,

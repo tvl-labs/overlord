@@ -18,7 +18,7 @@ use serde::{Deserialize, Serialize};
 
 use overlord::error::ConsensusError;
 use overlord::types::{Commit, Hash, Node, OverlordMsg, Status, ViewChangeReason};
-use overlord::{Codec, Consensus, Crypto, DurationConfig, Overlord, OverlordHandler, Wal};
+use overlord::{Consensus, Crypto, DurationConfig, Overlord, OverlordHandler, Wal};
 
 lazy_static! {
     static ref HASHER_INST: HasherKeccak = HasherKeccak::new();
@@ -45,25 +45,6 @@ impl Speech {
 struct Detail {
     inner: Bytes,
 }
-
-macro_rules! impl_codec_for {
-    ($($struc: ident),+) => {
-        $(
-            impl Codec for $struc {
-                fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>> {
-                    Ok(Bytes::from(bincode::serialize(&self.inner).unwrap()))
-                }
-
-                fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>> {
-                    let data: Option<Bytes> = bincode::deserialize(&data).unwrap();
-                    Ok($struc { inner: data.unwrap() })
-                }
-            }
-        )+
-    }
-}
-
-impl_codec_for!(Speech, Detail);
 
 struct MockWal {
     inner: Mutex<Option<Bytes>>,

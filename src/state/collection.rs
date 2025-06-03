@@ -456,7 +456,7 @@ impl Votes {
 
         self.by_hash
             .entry(hash)
-            .or_insert_with(HashSet::new)
+            .or_default()
             .insert(addr.clone());
         self.by_address.entry(addr).or_insert((vote, ctx));
     }
@@ -500,7 +500,7 @@ impl ChokeCollector {
     pub fn insert(&mut self, round: u64, signed_choke: SignedChoke) {
         self.chokes
             .entry(round)
-            .or_insert_with(HashMap::new)
+            .or_default()
             .insert(signed_choke.address.clone(), signed_choke);
     }
 
@@ -550,9 +550,7 @@ impl ChokeCollector {
 #[cfg(test)]
 mod test {
     use std::collections::{HashMap, HashSet};
-    use std::error::Error;
 
-    use bincode::{deserialize, serialize};
     use bytes::Bytes;
     use creep::Context;
     use rand::random;
@@ -563,24 +561,11 @@ mod test {
         Address, AggregatedSignature, AggregatedVote, Hash, Proposal, Signature, SignedProposal,
         SignedVote, Vote, VoteType,
     };
-    use crate::Codec;
 
     #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
     struct Pill {
         height: u64,
         epoch: Vec<u64>,
-    }
-
-    impl Codec for Pill {
-        fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>> {
-            let encode: Vec<u8> = serialize(&self).expect("Serialize Pill error");
-            Ok(Bytes::from(encode))
-        }
-
-        fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>> {
-            let decode: Pill = deserialize(data.as_ref()).expect("Deserialize Pill error.");
-            Ok(decode)
-        }
     }
 
     impl Pill {

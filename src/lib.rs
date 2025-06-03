@@ -34,6 +34,7 @@ pub use self::overlord::Overlord;
 pub use self::overlord::OverlordHandler;
 pub use self::utils::auth_manage::{extract_voters, get_leader};
 pub use creep::Context;
+use serde::de::DeserializeOwned;
 pub use wal::WalInfo;
 
 use std::error::Error;
@@ -110,13 +111,9 @@ pub trait Consensus<T: Codec>: Send + Sync {
 }
 
 /// Trait for doing serialize and deserialize.
-pub trait Codec: Clone + Debug + Send + PartialEq + Eq {
-    /// Serialize self into bytes.
-    fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>>;
+pub trait Codec: Serialize + DeserializeOwned + Clone + Debug + Send + PartialEq + Eq {}
 
-    /// Deserialize date into self.
-    fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>>;
-}
+impl<T> Codec for T where T: Serialize + DeserializeOwned + Clone + Debug + Send + PartialEq + Eq {}
 
 /// Trait for save and load wal information.
 #[async_trait]

@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use overlord::error::ConsensusError;
 use overlord::types::{Commit, Hash, Node, OverlordMsg, Status, ViewChangeReason};
-use overlord::{Codec, Consensus, DurationConfig, Overlord, OverlordHandler};
+use overlord::{Consensus, DurationConfig, Overlord, OverlordHandler};
 
 use super::crypto::MockCrypto;
 use super::utils::{gen_random_bytes, hash, timer_config, to_hex};
@@ -29,16 +29,6 @@ pub struct Block {
 impl Block {
     fn from(content: Bytes) -> Self {
         Block { inner: content }
-    }
-}
-
-impl Codec for Block {
-    fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>> {
-        Ok(self.inner.clone())
-    }
-
-    fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>> {
-        Ok(Block { inner: data })
     }
 }
 
@@ -275,16 +265,5 @@ impl Participant {
             .unwrap();
 
         Ok(())
-    }
-}
-
-#[test]
-fn test_block_codec() {
-    for _ in 0..100 {
-        let content = gen_random_bytes();
-        let block = Block::from(content);
-
-        let decode: Block = Codec::decode(Codec::encode(&block).unwrap()).unwrap();
-        assert_eq!(decode, block);
     }
 }

@@ -1,5 +1,5 @@
 use derive_more::Display;
-use serde::{Deserialize, Serialize};
+use serde::{de::DeserializeOwned, Deserialize, Serialize};
 
 use crate::smr::smr_types::{Lock, Step};
 use crate::types::{AggregatedVote, UpdateFrom};
@@ -7,10 +7,7 @@ use crate::Codec;
 
 #[derive(Serialize, Deserialize, Clone, Debug, Display, Eq, PartialEq)]
 #[rustfmt::skip]
-#[display(
-    fmt = "wal info height {}, round {}, step {:?}",
-    height, round, step,
-)]
+#[display("wal info height {}, round {}, step {:?}", height, round, step)]
 /// Structure of Wal Info
 pub struct WalInfo<T: Codec> {
     /// height
@@ -20,6 +17,7 @@ pub struct WalInfo<T: Codec> {
     /// step
     pub step:   Step,
     /// lock
+    #[serde(bound = "T: Serialize + DeserializeOwned")]
     pub lock:   Option<WalLock<T>>,
     /// from
     pub from:   UpdateFrom,
@@ -38,10 +36,11 @@ impl<T: Codec> WalInfo<T> {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "wal lock round {}, qc {:?}", lock_round, lock_votes)]
+#[display("wal lock round {}, qc {:?}", lock_round, lock_votes)]
 pub struct WalLock<T: Codec> {
     pub lock_round: u64,
     pub lock_votes: AggregatedVote,
+    #[serde(bound = "T: Serialize + DeserializeOwned")]
     pub content: T,
 }
 
@@ -64,29 +63,15 @@ pub struct SMRBase {
 
 #[cfg(test)]
 mod test {
-    use std::error::Error;
-
     use bytes::Bytes;
     use rand::random;
 
     use super::*;
     use crate::types::{AggregatedSignature, VoteType};
 
-    #[derive(Clone, Debug, PartialEq, Eq)]
+    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
     struct Pill {
         inner: Vec<u8>,
-    }
-
-    impl Codec for Pill {
-        fn encode(&self) -> Result<Bytes, Box<dyn Error + Send>> {
-            Ok(Bytes::from(self.inner.clone()))
-        }
-
-        fn decode(data: Bytes) -> Result<Self, Box<dyn Error + Send>> {
-            Ok(Pill {
-                inner: data.as_ref().to_vec(),
-            })
-        }
     }
 
     impl Pill {

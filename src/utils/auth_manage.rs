@@ -14,7 +14,7 @@ use crate::ConsensusResult;
 /// according to its usage scene. The vote weight need look up by address frequently, therefore,
 /// address with vote weight saved in a `HashMap`.
 #[derive(Clone, Debug, Display, PartialEq, Eq)]
-#[display(fmt = "Authority List {:?}", address)]
+#[display("Authority List {:?}", address)]
 pub struct AuthorityManage {
     address: Vec<Address>,
     propose_weights: Vec<u64>,
