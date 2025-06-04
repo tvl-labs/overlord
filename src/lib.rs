@@ -40,6 +40,7 @@ pub use wal::WalInfo;
 use std::error::Error;
 use std::fmt::Debug;
 
+use alloy_rlp::{RlpDecodable, RlpEncodable};
 use async_trait::async_trait;
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
@@ -158,7 +159,9 @@ pub trait Crypto: Send {
 }
 
 /// The setting of the timeout interval of each step.
-#[derive(Serialize, Deserialize, Default, Clone, Debug, PartialEq, Eq)]
+#[derive(
+    Serialize, Deserialize, RlpEncodable, RlpDecodable, Default, Clone, Debug, PartialEq, Eq,
+)]
 pub struct DurationConfig {
     /// The proportion of propose timeout to the height interval.
     pub propose_ratio: u64,

@@ -1,6 +1,7 @@
 use std::cmp::{Ord, Ordering, PartialOrd};
 use std::convert::TryFrom;
 
+use alloy_rlp::{RlpDecodable, RlpEncodable};
 use bytes::Bytes;
 use derive_more::Display;
 use serde::{de::DeserializeOwned, Deserialize, Serialize};
@@ -28,8 +29,8 @@ pub enum VoteType {
     Precommit,
 }
 
-impl From<VoteType> for u8 {
-    fn from(v: VoteType) -> u8 {
+impl From<&VoteType> for u8 {
+    fn from(v: &VoteType) -> u8 {
         match v {
             VoteType::Prevote => 1,
             VoteType::Precommit => 2,
@@ -194,7 +195,7 @@ pub struct Proposal<T: Codec> {
 }
 
 /// A PoLC.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, PartialEq, Eq)]
 pub struct PoLC {
     /// Lock round of the proposal.
     pub lock_round: u64,
@@ -203,7 +204,9 @@ pub struct PoLC {
 }
 
 /// A signed vote.
-#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Display, PartialEq, Eq, Hash,
+)]
 #[display("Signed vote {:?}", vote)]
 pub struct SignedVote {
     /// Signature of the vote.
@@ -249,7 +252,7 @@ impl SignedVote {
 }
 
 /// An aggregate signature.
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct AggregatedSignature {
     /// Aggregated signature.
     #[serde(with = "super::serde_hex")]
@@ -260,7 +263,7 @@ pub struct AggregatedSignature {
 }
 
 /// An aggregated vote.
-#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Display, PartialEq, Eq, Hash)]
 #[rustfmt::skip]
 #[display("{:?} aggregated vote height {}, round {}", vote_type, height, round)]
 pub struct AggregatedVote {
@@ -308,7 +311,9 @@ impl AggregatedVote {
 }
 
 /// A vote.
-#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq, Hash)]
+#[derive(
+    Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Display, PartialEq, Eq, Hash,
+)]
 #[display("{:?} vote height {}, round {}", vote_type, height, round)]
 pub struct Vote {
     /// Height of the vote.
@@ -335,7 +340,7 @@ pub struct Commit<T: Codec> {
 }
 
 /// A Proof.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, PartialEq, Eq)]
 pub struct Proof {
     /// Height of the proof.
     pub height: u64,
@@ -348,17 +353,20 @@ pub struct Proof {
 }
 
 /// A rich status.
-#[derive(Serialize, Deserialize, Clone, Debug, Display, PartialEq, Eq)]
+#[derive(
+    Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Display, PartialEq, Eq,
+)]
 #[display("Rich status height {}", height)]
+#[rlp(trailing)]
 pub struct Status {
     /// New height.
     pub height: u64,
+    /// New authority list.
+    pub authority_list: Vec<Node>,
     /// New block interval.
     pub interval: Option<u64>,
     /// New timeout configuration.
     pub timer_config: Option<DurationConfig>,
-    /// New authority list.
-    pub authority_list: Vec<Node>,
 }
 
 impl From<Status> for SMRStatus {
@@ -380,7 +388,7 @@ impl Status {
 }
 
 /// A node info.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, PartialEq, Eq)]
 pub struct Node {
     /// Node address.
     #[serde(with = "super::serde_hex")]
@@ -440,7 +448,7 @@ pub(crate) struct VerifyResp {
 }
 
 /// An aggregated choke.
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct AggregatedChoke {
     /// The height of the aggregated choke.
     pub height: u64,
@@ -469,7 +477,7 @@ impl AggregatedChoke {
 }
 
 /// A signed choke.
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct SignedChoke {
     /// The signature of the choke.
     pub signature: Signature,
@@ -480,7 +488,7 @@ pub struct SignedChoke {
 }
 
 /// A choke.
-#[derive(Serialize, Deserialize, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Choke {
     /// The height of the choke.
     pub height: u64,
@@ -499,7 +507,7 @@ impl Choke {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug)]
+#[derive(Serialize, Deserialize, RlpEncodable, RlpDecodable, Clone, Debug)]
 pub(crate) struct HashChoke {
     pub(crate) height: u64,
     pub(crate) round: u64,

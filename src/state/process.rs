@@ -1524,7 +1524,10 @@ where
 
         // Check block failed case.
         let proposal = proposal.unwrap().0;
-        if !self.is_full_transaction.contains_key(&proposal.proposal.block_hash) {
+        if !self
+            .is_full_transaction
+            .contains_key(&proposal.proposal.block_hash)
+        {
             return ViewChangeReason::CheckBlockNotPass;
         }
 

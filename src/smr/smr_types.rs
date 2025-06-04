@@ -6,7 +6,9 @@ use crate::wal::SMRBase;
 use crate::DurationConfig;
 
 /// SMR steps. The default step is commit step because SMR needs rich status to start a new block.
-#[derive(Serialize, Deserialize, Default, Clone, Debug, Display, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(
+    Serialize, Deserialize, Default, Clone, Debug, Display, PartialEq, Eq, PartialOrd, Ord,
+)]
 pub enum Step {
     /// Prepose step, in this step:
     /// Firstly, each node calculate the new proposer, then:
@@ -57,9 +59,8 @@ pub enum Step {
     Commit,
 }
 
-
-impl From<Step> for u8 {
-    fn from(step: Step) -> u8 {
+impl From<&Step> for u8 {
+    fn from(step: &Step) -> u8 {
         match step {
             Step::Propose => 0,
             Step::Prevote => 1,

@@ -454,10 +454,7 @@ impl Votes {
             return;
         }
 
-        self.by_hash
-            .entry(hash)
-            .or_default()
-            .insert(addr.clone());
+        self.by_hash.entry(hash).or_default().insert(addr.clone());
         self.by_address.entry(addr).or_insert((vote, ctx));
     }
 
