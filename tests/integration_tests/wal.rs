@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::sync::{Arc, Mutex};
 
+use alloy_rlp::Decodable;
 use async_trait::async_trait;
 use bytes::Bytes;
 use lru_cache::LruCache;
@@ -59,7 +60,7 @@ impl Wal for MockWal {
     async fn load(&self) -> Result<Option<Bytes>, Box<dyn Error + Send>> {
         let info = self.content.lock().unwrap().as_ref().cloned();
         if let Some(info) = info.clone() {
-            let content: WalInfo<Block> = bcs::from_bytes(&info).unwrap();
+            let content: WalInfo<Block> = Decodable::decode(&mut info.as_ref()).unwrap();
             println!("{:?} load {:?}", to_hex(&self.address), content);
         }
         Ok(info)

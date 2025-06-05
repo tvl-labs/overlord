@@ -4,6 +4,7 @@ use std::string::ToString;
 use std::time::{Duration, Instant};
 use std::{ops::BitXor, sync::Arc};
 
+use alloy_rlp::Decodable;
 use bit_vec::BitVec;
 use bytes::Bytes;
 use creep::Context;
@@ -720,10 +721,7 @@ where
 
         let signature = self
             .util
-            .sign(
-                self.util
-                    .hash(Bytes::from(bcs::to_bytes(&choke.to_hash()).unwrap())),
-            )
+            .sign(self.util.hash(alloy_rlp::encode(&choke.to_hash()).into()))
             .map_err(|err| ConsensusError::CryptoErr(format!("sign choke error {:?}", err)))?;
         let signed_choke = SignedChoke {
             signature,
@@ -1387,10 +1385,7 @@ where
         log::debug!("Overlord: state sign a proposal");
         let signature = self
             .util
-            .sign(
-                self.util
-                    .hash(Bytes::from(bcs::to_bytes(&proposal).unwrap())),
-            )
+            .sign(self.util.hash(alloy_rlp::encode(&proposal).into()))
             .map_err(|err| ConsensusError::CryptoErr(format!("{:?}", err)))?;
 
         Ok(SignedProposal {
@@ -1403,7 +1398,7 @@ where
         log::debug!("Overlord: state sign a vote");
         let signature = self
             .util
-            .sign(self.util.hash(Bytes::from(bcs::to_bytes(&vote).unwrap())))
+            .sign(self.util.hash(alloy_rlp::encode(&vote).into()))
             .map_err(|err| ConsensusError::CryptoErr(format!("{:?}", err)))?;
 
         Ok(SignedVote {
@@ -1625,7 +1620,7 @@ where
         };
 
         self.wal
-            .save(Bytes::from(bcs::to_bytes(&wal_info).unwrap()))
+            .save(alloy_rlp::encode(&wal_info).into())
             .await
             .map_err(|e| {
                 log::error!("Overlord: state save wal error {:?}", e);
@@ -1755,7 +1750,7 @@ where
             return Ok(None);
         }
 
-        let info: WalInfo<T> = bcs::from_bytes(tmp.unwrap().as_ref())
+        let info: WalInfo<T> = Decodable::decode(&mut tmp.unwrap().as_ref())
             .map_err(|e| ConsensusError::LoadWalErr(e.to_string()))?;
         Ok(Some(info))
     }

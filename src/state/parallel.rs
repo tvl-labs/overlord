@@ -21,7 +21,7 @@ pub async fn parallel_verify<T: Codec + 'static, C: Crypto + Sync + 'static>(
     tokio::spawn(async move {
         match msg {
             OverlordMsg::SignedProposal(sp) => {
-                let hash = crypto.hash(Bytes::from(bcs::to_bytes(&sp.proposal).unwrap()));
+                let hash = crypto.hash(alloy_rlp::encode(&sp.proposal).into());
                 if let Err(err) = crypto.verify_signature(
                     sp.signature.clone(),
                     hash,
@@ -50,7 +50,7 @@ pub async fn parallel_verify<T: Codec + 'static, C: Crypto + Sync + 'static>(
             }
 
             OverlordMsg::SignedVote(sv) => {
-                let hash = crypto.hash(Bytes::from(bcs::to_bytes(&sv.vote).unwrap()));
+                let hash = crypto.hash(alloy_rlp::encode(&sv.vote).into());
                 crypto
                     .verify_signature(sv.signature.clone(), hash, sv.voter.clone())
                     .map_or_else(
@@ -72,7 +72,7 @@ pub async fn parallel_verify<T: Codec + 'static, C: Crypto + Sync + 'static>(
             }
 
             OverlordMsg::SignedChoke(sc) => {
-                let hash = crypto.hash(Bytes::from(bcs::to_bytes(&sc.choke.to_hash()).unwrap()));
+                let hash = crypto.hash(alloy_rlp::encode(&sc.choke.to_hash()).into());
                 crypto
                     .verify_signature(sc.signature.clone(), hash, sc.address.clone())
                     .map_or_else(
@@ -110,7 +110,7 @@ fn verify_qc<T: Codec, C: Crypto>(
     tx: UnboundedSender<(Context, OverlordMsg<T>)>,
     msg_clone: OverlordMsg<T>,
 ) {
-    let hash = crypto.hash(Bytes::from(bcs::to_bytes(&qc.to_vote()).unwrap()));
+    let hash = crypto.hash(alloy_rlp::encode(&qc.to_vote()).into());
     if let Ok(voters) = get_voters(&qc.signature.address_bitmap, authority) {
         crypto
             .verify_aggregated_signature(qc.signature.signature.clone(), hash, voters)
